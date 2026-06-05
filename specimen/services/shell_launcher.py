@@ -82,7 +82,7 @@ class ShellLauncher:
             if k == "PATH":
                 # En Fish, el PATH se define con espacios en lugar de ':'
                 bin_path = v.split(":")[0]
-                cmds.append(f"set -gx PATH \"{bin_path}\" \\$PATH")
+                cmds.append(f"set -gx PATH \"{bin_path}\" $PATH")
             else:
                 cmds.append(f"set -gx {k} \"{v}\"")
                 

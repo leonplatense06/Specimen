@@ -334,3 +334,16 @@ def test_quit_specimen_not_active(isolated_specimen_env):
     with pytest.raises(SpecimenError):
         SpecimenService.quit_specimen(conserved=True)
 
+def test_build_fish_init():
+    from specimen.services.shell_launcher import ShellLauncher
+    launcher = ShellLauncher()
+    env = {
+        "PATH": "/home/user/.specimen/spaces/media/bin:/usr/bin:/bin",
+        "SPEC_NAME": "media",
+    }
+    cmds = launcher._build_fish_init(env)
+    # Verificar que $PATH no tiene barra invertida (\) de escape
+    assert 'set -gx PATH "/home/user/.specimen/spaces/media/bin" $PATH' in cmds
+    assert 'set -gx SPEC_NAME "media"' in cmds
+    assert 'functions -c fish_prompt _original_fish_prompt' in cmds
+

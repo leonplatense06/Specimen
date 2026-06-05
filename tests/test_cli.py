@@ -210,3 +210,14 @@ def test_cli_persist_command(isolated_specimen_env):
         result = runner.invoke(app, ["persist", "media", "--unset"])
         assert result.exit_code == 0
         assert "is now non-persistent" in result.stdout
+
+def test_cli_unpersist_command(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        runner.invoke(app, ["persist", "media"])
+        
+        result = runner.invoke(app, ["unpersist", "media"])
+        assert result.exit_code == 0
+        assert "is now non-persistent" in result.stdout
+

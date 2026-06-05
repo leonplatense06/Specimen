@@ -94,6 +94,10 @@ spec persist my-specimen
 
 To remove persistence (it will default to being deleted on exit unless `-c` is used):
 ```bash
+spec unpersist my-specimen
+```
+Alternatively, you can also use:
+```bash
 spec persist my-specimen --unset
 # or
 spec persist my-specimen -u

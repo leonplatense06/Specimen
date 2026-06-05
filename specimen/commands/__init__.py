@@ -7,3 +7,5 @@ from specimen.commands.tree import tree_command
 from specimen.commands.enter import enter_command
 from specimen.commands.quit import quit_command
 from specimen.commands.persist import persist_command
+from specimen.commands.unpersist import unpersist_command
+

@@ -8,7 +8,27 @@ Specimen works like a "venv for terminal tools", allowing the creation of isolat
 - Python 3.11+
 - Linux
 
-## Development Installation
+## Installation
+
+### 1. Global/User-wide Installation (Recommended)
+You can install Specimen user-wide. The installer automatically sets up an isolated environment under `~/.specimen/venv` and symlinks the `spec` executable to `~/.local/bin/spec` (which is typically in your `PATH`):
+
+```bash
+./install.sh
+```
+
+To install in **development (editable) mode**, where local modifications to this codebase are instantly applied without reinstalling:
+```bash
+./install.sh --dev
+```
+
+To **uninstall** Specimen from your system:
+```bash
+./uninstall.sh
+```
+
+### 2. Local Development Environment
+Alternatively, you can install the package inside your own local virtual environment:
 ```bash
 pip install -e ".[dev]"
 ```

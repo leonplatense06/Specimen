@@ -216,3 +216,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# archivo de contexto Specimen V1
+Specimen-V1.md

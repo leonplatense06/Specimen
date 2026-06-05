@@ -1,0 +1,1 @@
+from specimen.validators.specimen_validator import SpecimenValidator

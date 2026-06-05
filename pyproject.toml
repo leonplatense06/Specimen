@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "specimen"
+version = "0.1.0"
+description = "CLI de entornos aislados para herramientas de terminal (Linux-first)"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: POSIX :: Linux",
+]
+dependencies = [
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "dacite>=1.8.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-mock>=3.10.0",
+]
+
+[project.scripts]
+spec = "specimen.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["specimen*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+

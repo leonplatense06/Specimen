@@ -9,6 +9,7 @@ from specimen.commands import (
     tree_command,
     enter_command,
     quit_command,
+    persist_command,
 )
 from specimen.services.runtime_service import RuntimeService
 
@@ -39,6 +40,7 @@ app.command(name="clone")(clone_command)
 app.command(name="tree")(tree_command)
 app.command(name="enter")(enter_command)
 app.command(name="quit")(quit_command)
+app.command(name="persist")(persist_command)
 
 if __name__ == "__main__":
     app()

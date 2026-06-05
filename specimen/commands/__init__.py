@@ -6,3 +6,4 @@ from specimen.commands.clone import clone_command
 from specimen.commands.tree import tree_command
 from specimen.commands.enter import enter_command
 from specimen.commands.quit import quit_command
+from specimen.commands.persist import persist_command

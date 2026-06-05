@@ -1,3 +1,4 @@
+import os
 import pytest
 from typer.testing import CliRunner
 from unittest.mock import patch
@@ -129,5 +130,85 @@ def test_cli_quit_success(isolated_specimen_env):
         assert result.exit_code == 0
         assert "desactivado y destruido" in result.stdout
         mock_quit.assert_called_once_with(False)
+
+def test_cli_quit_prompts_and_cancels(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        from specimen.models.runtime import RuntimeState
+        from specimen.services.runtime_service import RuntimeService
+        runtime_state = RuntimeState(
+            active_specimen="media",
+            entered_at="2026-06-05T00:00:00",
+            shell_type="bash",
+            session_id="session123",
+            shell_pid=os.getpid(),
+            temp_script_path=None
+        )
+        RuntimeService.save_runtime_state(runtime_state)
+        
+        with patch("specimen.services.specimen_service.SpecimenService.quit_specimen") as mock_quit:
+            result = runner.invoke(app, ["quit"], input="n\n")
+            assert result.exit_code == 1
+            assert "Operación cancelada" in result.stdout
+            mock_quit.assert_not_called()
+
+def test_cli_quit_prompts_and_confirms(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        from specimen.models.runtime import RuntimeState
+        from specimen.services.runtime_service import RuntimeService
+        runtime_state = RuntimeState(
+            active_specimen="media",
+            entered_at="2026-06-05T00:00:00",
+            shell_type="bash",
+            session_id="session123",
+            shell_pid=os.getpid(),
+            temp_script_path=None
+        )
+        RuntimeService.save_runtime_state(runtime_state)
+        
+        with patch("specimen.services.specimen_service.SpecimenService.quit_specimen") as mock_quit:
+            result = runner.invoke(app, ["quit"], input="y\n")
+            assert result.exit_code == 0
+            assert "desactivado y destruido" in result.stdout
+            mock_quit.assert_called_once_with(False)
+
+def test_cli_quit_no_prompt_for_persistent(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        runner.invoke(app, ["persist", "media"])
+        
+        from specimen.models.runtime import RuntimeState
+        from specimen.services.runtime_service import RuntimeService
+        runtime_state = RuntimeState(
+            active_specimen="media",
+            entered_at="2026-06-05T00:00:00",
+            shell_type="bash",
+            session_id="session123",
+            shell_pid=os.getpid(),
+            temp_script_path=None
+        )
+        RuntimeService.save_runtime_state(runtime_state)
+        
+        with patch("specimen.services.specimen_service.SpecimenService.quit_specimen") as mock_quit:
+            result = runner.invoke(app, ["quit"])
+            assert result.exit_code == 0
+            assert "desactivado y conservado" in result.stdout
+            mock_quit.assert_called_once_with(False)
+
+def test_cli_persist_command(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        result = runner.invoke(app, ["persist", "media"])
+        assert result.exit_code == 0
+        assert "ahora es persistente" in result.stdout
+        
+        result = runner.invoke(app, ["persist", "media", "--unset"])
+        assert result.exit_code == 0
+        assert "ahora es no persistente" in result.stdout
 
 

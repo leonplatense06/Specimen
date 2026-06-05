@@ -347,3 +347,59 @@ def test_build_fish_init():
     assert 'set -gx SPEC_NAME "media"' in cmds
     assert 'functions -c fish_prompt _original_fish_prompt' in cmds
 
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_set_persistence(mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    
+    # Por defecto no es persistente
+    config, _, _, _ = SpecimenService.get_specimen_info(name)
+    assert config.persistent is False
+    
+    # Activar persistencia
+    SpecimenService.set_persistence(name, True)
+    config, _, _, _ = SpecimenService.get_specimen_info(name)
+    assert config.persistent is True
+    
+    # Desactivar persistencia
+    SpecimenService.set_persistence(name, False)
+    config, _, _, _ = SpecimenService.get_specimen_info(name)
+    assert config.persistent is False
+
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_quit_specimen_respects_persistence(mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    SpecimenService.set_persistence(name, True)
+    
+    from specimen.models.runtime import RuntimeState
+    from specimen.services.runtime_service import RuntimeService
+    
+    state_path = specimen_state_json(name)
+    state = load_json(state_path, SpecimenState)
+    state.active = True
+    save_json(state_path, state)
+    
+    runtime_state = RuntimeState(
+        active_specimen=name,
+        entered_at="2026-06-05T00:00:00",
+        shell_type="bash",
+        session_id="session123",
+        shell_pid=99999,
+        temp_script_path=None
+    )
+    RuntimeService.save_runtime_state(runtime_state)
+    
+    # Aunque conserved=False, al ser persistente debe conservarse
+    SpecimenService.quit_specimen(conserved=False)
+    
+    assert specimen_dir(name).exists()
+    
+    state = load_json(specimen_state_json(name), SpecimenState)
+    assert state.active is False
+    assert state.exit_mode == "conserved"
+    
+    active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
+    assert active_name is None
+
+

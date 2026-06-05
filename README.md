@@ -67,36 +67,57 @@ spec enter my-specimen
 Within the subshell, your prompt will be prefixed (e.g. `(my-specimen) user@host:~$`) and key environment variables (`PATH`, `HOME`, `TMPDIR`, and XDG paths) will be redirected to the specimen's directories.
 
 ### 4. Quit/Exit a Specimen (Deactivation)
-Exit the active specimen session. You can choose to destroy (delete) the environment or conserve (keep) it:
-```bash
-# Exit and destroy (delete) the specimen (default behavior)
-spec quit
+Exit the active specimen session.
 
-# Exit and conserve (keep) the specimen in disk for reuse
+If the specimen is **not persistent**, quitting without `-c` or `--conserv` will prompt you for confirmation, warning that the specimen will be deleted:
+```bash
+spec quit
+# ¿Estás seguro de que quieres salir? Se eliminará el specimen 'my-specimen'. [y/N]: 
+```
+
+If you confirm, the specimen is deactivated and destroyed. If you want to keep/conserve it on disk, use the `-c` or `--conserv` option to bypass the confirmation:
+```bash
 spec quit --conserv
 # or
 spec quit -c
 ```
 
-### 5. Clone a Specimen
+If the specimen is marked as **persistent**, `spec quit` will automatically conserve it on disk without prompting for confirmation (even without `-c`).
+
+### 5. Persist a Specimen
+Mark a specimen as persistent so that it is automatically conserved when exiting, even if you do not specify `-c` or `--conserv` during `spec quit`. Persistent specimens do not prompt for confirmation on exit.
+
+To make a specimen persistent:
+```bash
+spec persist my-specimen
+```
+
+To remove persistence (it will default to being deleted on exit unless `-c` is used):
+```bash
+spec persist my-specimen --unset
+# or
+spec persist my-specimen -u
+```
+
+### 6. Clone a Specimen
 Create an independent copy/snapshot of an existing specimen. The cloned child inherits the parent's directory structure and tools. The child's size limit must be greater than or equal to the parent's actual size on disk:
 ```bash
 spec clone my-specimen my-specimen-clone --size 512
 ```
 
-### 6. Show Details (Info)
+### 7. Show Details (Info)
 Show detailed metadata, system paths, and installed tools for a specific specimen:
 ```bash
 spec info my-specimen
 ```
 
-### 7. Hierarchy Tree
+### 8. Hierarchy Tree
 Show parent-child relationships between all specimens as a visual tree:
 ```bash
 spec tree
 ```
 
-### 8. Delete a Specimen
+### 9. Delete a Specimen
 Remove a specimen and all of its files. It prompts for confirmation unless you use the `--force` / `-f` option. Active specimens cannot be deleted:
 ```bash
 spec rm my-specimen-clone

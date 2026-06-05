@@ -324,6 +324,15 @@ class SpecimenService:
         RuntimeService.cleanup_stale_specimen(normalized_name)
 
     @staticmethod
+    def set_persistence(name: str, persistent: bool) -> None:
+        """Establece si un specimen es persistente o no en su config.json."""
+        normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
+        config_path = specimen_config_json(normalized_name)
+        config = load_json(config_path, SpecimenConfig)
+        config.persistent = persistent
+        save_json(config_path, config)
+
+    @staticmethod
     def quit_specimen(conserved: bool) -> None:
         """Sale del specimen activo actual, y decide si se conserva o destruye."""
         runtime_state = RuntimeService.get_runtime_state()
@@ -332,9 +341,15 @@ class SpecimenService:
         if not active_name:
             raise SpecimenError("No hay ningún specimen activo actualmente.")
             
+        config_path = specimen_config_json(active_name)
+        config = load_json(config_path, SpecimenConfig)
+        
+        # Se conserva si el usuario lo solicita con -c, o si ya es persistente en config
+        should_conserve = conserved or config.persistent
+        exit_mode = "conserved" if should_conserve else "destroyed"
+        
         state_path = specimen_state_json(active_name)
         now_str = datetime.now().isoformat()
-        exit_mode = "conserved" if conserved else "destroyed"
         
         if state_path.exists():
             try:
@@ -358,7 +373,7 @@ class SpecimenService:
                     
         shell_pid = runtime_state.shell_pid
         
-        if not conserved:
+        if not should_conserve:
             s_dir = specimen_dir(active_name)
             if s_dir.exists():
                 shutil.rmtree(s_dir)

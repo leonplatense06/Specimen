@@ -215,3 +215,122 @@ def test_get_hierarchy(mock_free, isolated_specimen_env):
     assert adjacency["child1-2"] == []
     assert adjacency["grandchild1"] == []
 
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+@patch("specimen.services.shell_launcher.ShellLauncher.launch")
+def test_enter_specimen_success(mock_launch, mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    
+    mock_proc = MagicMock()
+    mock_proc.pid = 12345
+    mock_launch.return_value = mock_proc
+    
+    def mock_wait():
+        state = load_json(specimen_state_json(name), SpecimenState)
+        assert state.active is True
+        from specimen.services.runtime_service import RuntimeService
+        active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
+        assert active_name == name
+        return 0
+        
+    mock_proc.wait = mock_wait
+    
+    SpecimenService.enter_specimen(name)
+    
+    state = load_json(specimen_state_json(name), SpecimenState)
+    assert state.active is False
+    from specimen.services.runtime_service import RuntimeService
+    active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
+    assert active_name is None
+
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_enter_specimen_already_active(mock_free, isolated_specimen_env):
+    SpecimenService.create_specimen("media", 256)
+    SpecimenService.create_specimen("tools", 256)
+    
+    from specimen.models.runtime import RuntimeState
+    from specimen.services.runtime_service import RuntimeService
+    import os
+    
+    runtime_state = RuntimeState(
+        active_specimen="media",
+        entered_at="2026-06-05T00:00:00",
+        shell_type="bash",
+        session_id="session123",
+        shell_pid=os.getpid()
+    )
+    RuntimeService.save_runtime_state(runtime_state)
+    
+    from specimen.exceptions import SpecimenAlreadyActiveError
+    with pytest.raises(SpecimenAlreadyActiveError):
+        SpecimenService.enter_specimen("tools")
+
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_quit_specimen_conserved(mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    
+    from specimen.models.runtime import RuntimeState
+    from specimen.services.runtime_service import RuntimeService
+    
+    state_path = specimen_state_json(name)
+    state = load_json(state_path, SpecimenState)
+    state.active = True
+    save_json(state_path, state)
+    
+    runtime_state = RuntimeState(
+        active_specimen=name,
+        entered_at="2026-06-05T00:00:00",
+        shell_type="bash",
+        session_id="session123",
+        shell_pid=99999,
+        temp_script_path=None
+    )
+    RuntimeService.save_runtime_state(runtime_state)
+    
+    SpecimenService.quit_specimen(conserved=True)
+    
+    assert specimen_dir(name).exists()
+    
+    state = load_json(specimen_state_json(name), SpecimenState)
+    assert state.active is False
+    assert state.exit_mode == "conserved"
+    
+    active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
+    assert active_name is None
+
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_quit_specimen_destroyed(mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    
+    from specimen.models.runtime import RuntimeState
+    from specimen.services.runtime_service import RuntimeService
+    
+    state_path = specimen_state_json(name)
+    state = load_json(state_path, SpecimenState)
+    state.active = True
+    save_json(state_path, state)
+    
+    runtime_state = RuntimeState(
+        active_specimen=name,
+        entered_at="2026-06-05T00:00:00",
+        shell_type="bash",
+        session_id="session123",
+        shell_pid=99999,
+        temp_script_path=None
+    )
+    RuntimeService.save_runtime_state(runtime_state)
+    
+    SpecimenService.quit_specimen(conserved=False)
+    
+    assert not specimen_dir(name).exists()
+    
+    active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
+    assert active_name is None
+
+def test_quit_specimen_not_active(isolated_specimen_env):
+    from specimen.exceptions import SpecimenError
+    with pytest.raises(SpecimenError):
+        SpecimenService.quit_specimen(conserved=True)
+

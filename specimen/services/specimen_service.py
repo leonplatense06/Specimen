@@ -1,10 +1,14 @@
+import os
 import shutil
+from pathlib import Path
 from datetime import datetime
 from typing import List, Tuple, Optional
 from specimen.exceptions import (
     SpecimenActiveError,
     SpecimenNotFoundError,
     CloneSizeTooSmallError,
+    SpecimenAlreadyActiveError,
+    SpecimenError,
 )
 from specimen.models import SpecimenConfig, SpecimenState, ToolsConfig
 from specimen.paths import (
@@ -221,3 +225,147 @@ class SpecimenService:
             adjacency[parent].sort()
             
         return roots, adjacency
+
+    @staticmethod
+    def enter_specimen(name: str) -> None:
+        """Entra a un specimen y lanza una subshell aislada."""
+        normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
+        
+        active_specimen = RuntimeService.get_active_specimen(auto_cleanup=True)
+        if active_specimen:
+            raise SpecimenAlreadyActiveError(
+                f"Ya hay un specimen activo: '{active_specimen}'. Salir antes de entrar a otro."
+            )
+            
+        config_path = specimen_config_json(normalized_name)
+        config = load_json(config_path, SpecimenConfig)
+        s_dir = specimen_dir(normalized_name)
+        real_size = SizeService.get_specimen_size_mb(s_dir)
+        
+        if real_size > config.size_mb:
+            from rich.console import Console
+            Console().print(
+                f"[yellow]⚠ El specimen '{normalized_name}' usa {real_size} MB, "
+                f"superando el límite configurado de {config.size_mb} MB.[/yellow]"
+            )
+            
+        shell = os.environ.get("SHELL", "/bin/bash")
+        shell_name = Path(shell).name
+        if shell_name not in ["bash", "zsh", "fish"]:
+            from rich.console import Console
+            Console().print(
+                f"[yellow]⚠ Shell '{shell_name}' no soportada oficialmente. "
+                f"Usando bash como fallback.[/yellow]"
+            )
+            shell = "/bin/bash"
+            shell_name = "bash"
+
+        import uuid
+        session_id = str(uuid.uuid4())
+        
+        s_bin = specimen_bin(normalized_name)
+        s_tmp = specimen_tmp(normalized_name)
+        s_home = specimen_home(normalized_name)
+        
+        original_path = os.environ.get("PATH", "")
+        original_home = os.environ.get("HOME", str(Path.home()))
+        env = {
+            "PATH": f"{s_bin}:{original_path}",
+            "HOME": str(s_home),
+            "TMPDIR": str(s_tmp),
+            "XDG_DATA_HOME": str(s_home / ".local" / "share"),
+            "XDG_CONFIG_HOME": str(s_home / ".config"),
+            "XDG_CACHE_HOME": str(s_home / ".cache"),
+            "SPEC_NAME": normalized_name,
+            "SPEC_ROOT": str(s_dir),
+            "SPEC_HOME": str(s_home),
+            "SPEC_BIN": str(s_bin),
+            "SPEC_USER_HOME": original_home,
+        }
+        
+        state_path = specimen_state_json(normalized_name)
+        state = load_json(state_path, SpecimenState)
+        state.active = True
+        state.last_entered_at = datetime.now().isoformat()
+        save_json(state_path, state)
+        
+        from specimen.services.shell_launcher import ShellLauncher
+        from specimen.paths import temp_dir
+        
+        launcher = ShellLauncher()
+        temp_script_path = None
+        if shell_name == "bash":
+            temp_script_path = temp_dir() / f"{session_id}.sh"
+        elif shell_name == "zsh":
+            temp_script_path = temp_dir() / f"{session_id}_zsh"
+
+        from specimen.models.runtime import RuntimeState
+        runtime_state = RuntimeState(
+            active_specimen=normalized_name,
+            entered_at=state.last_entered_at,
+            shell_type=shell_name,
+            session_id=session_id,
+            shell_pid=None,
+            temp_script_path=str(temp_script_path) if temp_script_path else None
+        )
+        RuntimeService.save_runtime_state(runtime_state)
+
+        proc = launcher.launch(shell, env, session_id, temp_dir())
+        
+        runtime_state.shell_pid = proc.pid
+        RuntimeService.save_runtime_state(runtime_state)
+        
+        try:
+            proc.wait()
+        except KeyboardInterrupt:
+            proc.terminate()
+            proc.wait()
+            
+        RuntimeService.cleanup_stale_specimen(normalized_name)
+
+    @staticmethod
+    def quit_specimen(conserved: bool) -> None:
+        """Sale del specimen activo actual, y decide si se conserva o destruye."""
+        runtime_state = RuntimeService.get_runtime_state()
+        active_name = runtime_state.active_specimen
+        
+        if not active_name:
+            raise SpecimenError("No hay ningún specimen activo actualmente.")
+            
+        state_path = specimen_state_json(active_name)
+        now_str = datetime.now().isoformat()
+        exit_mode = "conserved" if conserved else "destroyed"
+        
+        if state_path.exists():
+            try:
+                state = load_json(state_path, SpecimenState)
+                state.active = False
+                state.last_exited_at = now_str
+                state.exit_mode = exit_mode
+                save_json(state_path, state)
+            except Exception:
+                pass
+                
+        RuntimeService.clear_runtime_state()
+        
+        if runtime_state.temp_script_path:
+            t_path = Path(runtime_state.temp_script_path)
+            if t_path.exists():
+                if t_path.is_dir():
+                    shutil.rmtree(t_path)
+                else:
+                    t_path.unlink()
+                    
+        shell_pid = runtime_state.shell_pid
+        
+        if not conserved:
+            s_dir = specimen_dir(active_name)
+            if s_dir.exists():
+                shutil.rmtree(s_dir)
+                
+        if shell_pid:
+            try:
+                import signal
+                os.kill(shell_pid, signal.SIGTERM)
+            except Exception:
+                pass

@@ -4,3 +4,5 @@ from specimen.commands.info import info_command
 from specimen.commands.rm import rm_command
 from specimen.commands.clone import clone_command
 from specimen.commands.tree import tree_command
+from specimen.commands.enter import enter_command
+from specimen.commands.quit import quit_command

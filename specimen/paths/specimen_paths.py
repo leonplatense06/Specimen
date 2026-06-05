@@ -3,7 +3,11 @@ from pathlib import Path
 
 def get_specimen_root() -> Path:
     """Retorna la raíz del directorio de Specimen, permitiendo sobrescribirla por entorno."""
-    return Path(os.environ.get("SPECIMEN_ROOT_DIR", Path.home() / ".specimen"))
+    if "SPECIMEN_ROOT_DIR" in os.environ:
+        return Path(os.environ["SPECIMEN_ROOT_DIR"])
+    if "SPEC_USER_HOME" in os.environ:
+        return Path(os.environ["SPEC_USER_HOME"]) / ".specimen"
+    return Path.home() / ".specimen"
 
 def spaces_dir() -> Path:
     return get_specimen_root() / "spaces"

@@ -59,25 +59,44 @@ List all existing specimens showing their type, parent, size usage vs limit, act
 spec list
 ```
 
-### 3. Clone a Specimen
+### 3. Enter a Specimen (Activation)
+Enter a specimen environment and launch an isolated subshell (supports Bash, Zsh, and Fish):
+```bash
+spec enter media
+```
+Within the subshell, your prompt will be prefixed (e.g. `(media) user@host:~$`) and key environment variables (`PATH`, `HOME`, `TMPDIR`, and XDG paths) will be redirected to the specimen's directories.
+
+### 4. Quit/Exit a Specimen (Deactivation)
+Exit the active specimen session. You can choose to destroy (delete) the environment or conserve (keep) it:
+```bash
+# Exit and destroy (delete) the specimen (default behavior)
+spec quit
+
+# Exit and conserve (keep) the specimen in disk for reuse
+spec quit --conserv
+# or
+spec quit -c
+```
+
+### 5. Clone a Specimen
 Create an independent copy/snapshot of an existing specimen. The cloned child inherits the parent's directory structure and tools. The child's size limit must be greater than or equal to the parent's actual size on disk:
 ```bash
 spec clone media media-cloned --size 512
 ```
 
-### 4. Show Details (Info)
+### 6. Show Details (Info)
 Show detailed metadata, system paths, and installed tools for a specific specimen:
 ```bash
 spec info media
 ```
 
-### 5. Hierarchy Tree
+### 7. Hierarchy Tree
 Show parent-child relationships between all specimens as a visual tree:
 ```bash
 spec tree
 ```
 
-### 6. Delete a Specimen
+### 8. Delete a Specimen
 Remove a specimen and all of its files. It prompts for confirmation unless you use the `--force` / `-f` option. Active specimens cannot be deleted:
 ```bash
 spec rm media-cloned

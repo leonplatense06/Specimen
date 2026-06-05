@@ -105,3 +105,29 @@ def test_cli_tree(isolated_specimen_env):
             assert "root" in result.stdout
             assert "child" in result.stdout
 
+def test_cli_enter_success(isolated_specimen_env):
+    with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
+        runner.invoke(app, ["new", "media", "--size", "256"])
+        
+        # Mockear enter_specimen para que no abra una shell real en test
+        with patch("specimen.services.specimen_service.SpecimenService.enter_specimen") as mock_enter:
+            result = runner.invoke(app, ["enter", "media"])
+            assert result.exit_code == 0
+            assert "Entering specimen" in result.stdout
+            mock_enter.assert_called_once_with("media")
+
+def test_cli_quit_success(isolated_specimen_env):
+    # Mockear quit_specimen
+    with patch("specimen.services.specimen_service.SpecimenService.quit_specimen") as mock_quit:
+        result = runner.invoke(app, ["quit", "-c"])
+        assert result.exit_code == 0
+        assert "desactivado y conservado" in result.stdout
+        mock_quit.assert_called_once_with(True)
+        
+    with patch("specimen.services.specimen_service.SpecimenService.quit_specimen") as mock_quit:
+        result = runner.invoke(app, ["quit"])
+        assert result.exit_code == 0
+        assert "desactivado y destruido" in result.stdout
+        mock_quit.assert_called_once_with(False)
+
+

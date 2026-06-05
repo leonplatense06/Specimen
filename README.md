@@ -72,7 +72,7 @@ Exit the active specimen session.
 If the specimen is **not persistent**, quitting without `-c` or `--conserv` will prompt you for confirmation, warning that the specimen will be deleted:
 ```bash
 spec quit
-# ¿Estás seguro de que quieres salir? Se eliminará el specimen 'my-specimen'. [y/N]: 
+# Are you sure you want to exit? The specimen 'spe' will be deleted. [y/N]:
 ```
 
 If you confirm, the specimen is deactivated and destroyed. If you want to keep/conserve it on disk, use the `-c` or `--conserv` option to bypass the confirmation:

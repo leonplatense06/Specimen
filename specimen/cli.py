@@ -15,7 +15,7 @@ from specimen.services.runtime_service import RuntimeService
 
 app = typer.Typer(
     name="spec",
-    help="CLI de entornos aislados para herramientas de terminal (Linux-first)",
+    help="Isolated terminal environments CLI for command-line tools (Linux-first)",
     no_args_is_help=True,
 )
 
@@ -24,14 +24,14 @@ console = Console()
 @app.callback()
 def main_callback(ctx: typer.Context):
     """
-    Callback principal que se ejecuta antes de cualquier comando.
-    Verifica si hay un specimen activo cuyo proceso de shell haya muerto y lo limpia.
+    Main callback executed before any command.
+    Checks if there is an active specimen whose shell process has died, and cleans it up.
     """
-    # get_active_specimen(auto_cleanup=True) realiza el chequeo del PID
-    # y la limpieza automática si el proceso ya no está vivo.
+    # get_active_specimen(auto_cleanup=True) checks the PID
+    # and performs automatic cleanup if the process is no longer alive.
     RuntimeService.get_active_specimen(auto_cleanup=True)
 
-# Registrar comandos
+# Register commands
 app.command(name="new")(new_command)
 app.command(name="list")(list_command)
 app.command(name="info")(info_command)

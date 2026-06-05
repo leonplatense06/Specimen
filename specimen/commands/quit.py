@@ -14,10 +14,10 @@ def quit_command(
         False,
         "--conserv",
         "-c",
-        help="Conserva el specimen en disco en lugar de destruirlo al salir"
+        help="Conserves the specimen on disk instead of destroying it upon exit"
     )
 ):
-    """Sale del specimen activo actual y decide si lo conserva o destruye."""
+    """Exits the current active specimen and decides whether to conserve or destroy it."""
     try:
         active_name = RuntimeService.get_active_specimen()
         is_persistent = False
@@ -30,18 +30,19 @@ def quit_command(
 
         if not conserved and not is_persistent:
             if active_name:
-                if not typer.confirm(f"¿Estás seguro de que quieres salir? Se eliminará el specimen '{active_name}'."):
-                    console.print("Operación cancelada.")
+                if not typer.confirm(f"Are you sure you want to exit? The specimen '{active_name}' will be deleted."):
+                    console.print("Operation cancelled.")
                     raise typer.Exit(code=1)
 
         SpecimenService.quit_specimen(conserved)
         was_conserved = conserved or is_persistent
-        mode_str = "conservado" if was_conserved else "destruido"
-        console.print(f"[green]✔ Specimen activo desactivado y {mode_str} exitosamente.[/green]")
+        mode_str = "conserved" if was_conserved else "destroyed"
+        console.print(f"[green]✔ Active specimen deactivated and {mode_str} successfully.[/green]")
     except SpecimenError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[red]Error inesperado:[/red] {e}")
+        console.print(f"[red]Unexpected error:[/red] {e}")
         raise typer.Exit(code=1)
+
 

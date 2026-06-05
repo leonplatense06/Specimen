@@ -20,5 +20,6 @@ from specimen.paths.specimen_paths import (
 import specimen.paths.specimen_paths as _paths
 
 def __getattr__(name: str):
-    """Delega de forma dinámica al módulo de rutas."""
+    """Dynamically delegates to the paths module."""
     return getattr(_paths, name)
+

@@ -6,13 +6,13 @@ from typing import Dict, Any
 class ShellLauncher:
     def launch(self, shell: str, env: Dict[str, str], session_id: str, temp_dir: Path) -> subprocess.Popen:
         """
-        Lanza la shell especificada configurando las variables de entorno y
-        el prompt de inicialización temporal. Retorna el objeto Popen.
+        Launches the specified shell, setting the environment variables and
+        the temporary initialization prompt. Returns the Popen object.
         """
         shell_name = Path(shell).name
         full_env = {**os.environ, **env}
         
-        # Asegurar que el directorio temp exista
+        # Ensure the temp directory exists
         temp_dir.mkdir(parents=True, exist_ok=True)
 
         if shell_name == "bash":
@@ -28,7 +28,7 @@ class ShellLauncher:
             return subprocess.Popen([shell, "--init-command", init_cmds], env=full_env)
 
         else:
-            # Fallback a bash con advertencia (el llamador se encarga de la advertencia)
+            # Fallback to bash (warning is handled by the caller)
             script_path = self._write_bash_rc(env, session_id, temp_dir)
             return subprocess.Popen(["bash", "--rcfile", str(script_path)], env=full_env)
 
@@ -36,16 +36,16 @@ class ShellLauncher:
         script_path = temp_dir / f"{session_id}.sh"
         lines = []
         
-        # Cargar configuración original del usuario
+        # Load the user's original configuration
         user_bashrc = Path.home() / ".bashrc"
         if user_bashrc.exists():
             lines.append(f"source {user_bashrc}")
             
-        # Exportar variables de Specimen
+        # Export Specimen environment variables
         for k, v in env.items():
             lines.append(f"export {k}=\"{v}\"")
             
-        # Configurar prompt
+        # Configure prompt
         spec_name = env.get("SPEC_NAME", "spec")
         lines.append(f"export PS1=\"({spec_name}) $PS1\"")
         
@@ -58,16 +58,16 @@ class ShellLauncher:
         zshrc_path = zdotdir / ".zshrc"
         lines = []
         
-        # Cargar configuración original del usuario
+        # Load the user's original configuration
         user_zshrc = Path.home() / ".zshrc"
         if user_zshrc.exists():
             lines.append(f"source {user_zshrc}")
             
-        # Exportar variables
+        # Export variables
         for k, v in env.items():
             lines.append(f"export {k}=\"{v}\"")
             
-        # Configurar prompt
+        # Configure prompt
         spec_name = env.get("SPEC_NAME", "spec")
         lines.append(f"export PROMPT=\"({spec_name}) $PROMPT\"")
         lines.append(f"export PS1=\"({spec_name}) $PS1\"")
@@ -80,13 +80,13 @@ class ShellLauncher:
         
         for k, v in env.items():
             if k == "PATH":
-                # En Fish, el PATH se define con espacios en lugar de ':'
+                # In Fish, PATH is defined with spaces instead of ':'
                 bin_path = v.split(":")[0]
                 cmds.append(f"set -gx PATH \"{bin_path}\" $PATH")
             else:
                 cmds.append(f"set -gx {k} \"{v}\"")
                 
-        # Redefinir fish_prompt para anteponer el nombre del specimen
+        # Redefine fish_prompt to prepend the specimen name
         spec_name = env.get("SPEC_NAME", "spec")
         cmds.append("functions -c fish_prompt _original_fish_prompt")
         cmds.append("function fish_prompt")

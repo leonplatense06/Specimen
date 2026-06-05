@@ -7,11 +7,11 @@ from specimen.exceptions import SpecimenError
 console = Console()
 
 def tree_command():
-    """Muestra la jerarquía de relaciones padre-hijo de los specimens."""
+    """Shows the hierarchy of parent-child relationships between specimens."""
     try:
         roots, adjacency = SpecimenService.get_hierarchy()
         if not roots:
-            console.print("[yellow]No se encontraron specimens creados. Usa 'spec new' para crear uno.[/yellow]")
+            console.print("[yellow]No specimens found. Use 'spec new' to create one.[/yellow]")
             return
         
         def add_children(node: Tree, parent_name: str):
@@ -29,5 +29,6 @@ def tree_command():
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[red]Error inesperado:[/red] {e}")
+        console.print(f"[red]Unexpected error:[/red] {e}")
         raise typer.Exit(code=1)
+

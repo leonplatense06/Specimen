@@ -1,26 +1,27 @@
 class SpecimenError(Exception):
-    """Error base de Specimen."""
+    """Base Specimen exception."""
 
 class SpecimenNotFoundError(SpecimenError):
-    """El specimen solicitado no existe."""
+    """The requested specimen does not exist."""
 
 class SpecimenAlreadyExistsError(SpecimenError):
-    """Ya existe un specimen con ese nombre."""
+    """A specimen with that name already exists."""
 
 class SpecimenActiveError(SpecimenError):
-    """No se puede realizar la operación: el specimen está activo."""
+    """Cannot perform operation: the specimen is currently active."""
 
 class SpecimenAlreadyActiveError(SpecimenError):
-    """Ya hay un specimen activo. Salir antes de entrar a otro."""
+    """A specimen is already active. Exit before entering another one."""
 
 class InvalidSpecimenNameError(SpecimenError):
-    """El nombre del specimen contiene caracteres inválidos."""
+    """Specimen name contains invalid characters."""
 
 class InsufficientDiskSpaceError(SpecimenError):
-    """No hay suficiente espacio en disco para la operación."""
+    """Insufficient disk space for the operation."""
 
 class InvalidSizeError(SpecimenError):
-    """El tamaño especificado es inválido."""
+    """Specified size is invalid."""
 
 class CloneSizeTooSmallError(SpecimenError):
-    """El --size del clon es menor al tamaño real del padre."""
+    """The clone's --size is smaller than the parent's actual size."""
+

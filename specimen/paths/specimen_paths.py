@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 def get_specimen_root() -> Path:
-    """Retorna la raíz del directorio de Specimen, permitiendo sobrescribirla por entorno."""
+    """Returns the root of the Specimen directory, allowing it to be overridden via environment variable."""
     if "SPECIMEN_ROOT_DIR" in os.environ:
         return Path(os.environ["SPECIMEN_ROOT_DIR"])
     if "SPEC_USER_HOME" in os.environ:
@@ -24,7 +24,7 @@ def logs_dir() -> Path:
 def active_json() -> Path:
     return runtime_dir() / "active.json"
 
-# Definimos __getattr__ para evaluación dinámica de constantes de módulo (retrocompatibilidad)
+# Define __getattr__ for dynamic evaluation of module constants (backward compatibility)
 def __getattr__(name: str) -> Path:
     if name == "SPECIMEN_ROOT":
         return get_specimen_root()
@@ -39,6 +39,7 @@ def __getattr__(name: str) -> Path:
     elif name == "ACTIVE_JSON":
         return active_json()
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 def specimen_dir(name: str) -> Path:
     return spaces_dir() / name.lower()
@@ -74,8 +75,9 @@ def specimen_tools_json(name: str) -> Path:
     return specimen_meta(name) / "tools.json"
 
 def ensure_base_dirs() -> None:
-    """Asegura que existan los directorios base globales del sistema Specimen."""
+    """Ensures that global base directories for the Specimen system exist."""
     spaces_dir().mkdir(parents=True, exist_ok=True)
     runtime_dir().mkdir(parents=True, exist_ok=True)
     temp_dir().mkdir(parents=True, exist_ok=True)
     logs_dir().mkdir(parents=True, exist_ok=True)
+

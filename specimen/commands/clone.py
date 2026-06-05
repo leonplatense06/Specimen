@@ -6,20 +6,21 @@ from specimen.exceptions import SpecimenError
 console = Console()
 
 def clone_command(
-    parent: str = typer.Argument(..., help="Nombre del specimen original (padre)"),
-    child: str = typer.Argument(..., help="Nombre del nuevo specimen clonado (hijo)"),
-    size: int = typer.Option(..., "--size", help="Tamaño límite en MB para el nuevo clon"),
+    parent: str = typer.Argument(..., help="Name of the original specimen (parent)"),
+    child: str = typer.Argument(..., help="Name of the new cloned specimen (child)"),
+    size: int = typer.Option(..., "--size", help="Size limit in MB for the new clone"),
 ):
-    """Crea un clon de un specimen existente."""
+    """Creates a clone of an existing specimen."""
     try:
         config = SpecimenService.clone_specimen(parent, child, size)
         console.print(
-            f"[green]✔ Specimen '[bold]{config.name}[/bold]' clonado exitosamente "
-            f"a partir de '[bold]{config.parent}[/bold]' ({config.size_mb} MB).[/green]"
+            f"[green]✔ Specimen '[bold]{config.name}[/bold]' cloned successfully "
+            f"from '[bold]{config.parent}[/bold]' ({config.size_mb} MB).[/green]"
         )
     except SpecimenError as e:
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[red]Error inesperado:[/red] {e}")
+        console.print(f"[red]Unexpected error:[/red] {e}")
         raise typer.Exit(code=1)
+

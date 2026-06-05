@@ -34,19 +34,19 @@ from specimen.services.runtime_service import RuntimeService
 class SpecimenService:
     @staticmethod
     def create_specimen(name: str, size_mb: int) -> SpecimenConfig:
-        """Crea un nuevo specimen base con la estructura de directorios y metadata inicial."""
-        # 1. Validar nombre y que no exista
+        """Creates a new base specimen with the directory structure and initial metadata."""
+        # 1. Validate name and ensure it does not exist
         normalized_name = SpecimenValidator.validate_name(name, check_not_exists=True)
-        # 2. Validar tamaño (entero positivo)
+        # 2. Validate size (positive integer)
         validated_size = SpecimenValidator.validate_size(size_mb)
         
-        # 3. Asegurar que existan los directorios base del sistema
+        # 3. Ensure base system directories exist
         ensure_base_dirs()
         
-        # 4. Verificar espacio libre en disco
+        # 4. Verify free disk space
         SizeService.validate_space_available(spaces_dir(), validated_size)
         
-        # 5. Crear la estructura de directorios
+        # 5. Create the directory structure
         s_dir = specimen_dir(normalized_name)
         specimen_bin(normalized_name).mkdir(parents=True, exist_ok=True)
         specimen_tmp(normalized_name).mkdir(parents=True, exist_ok=True)
@@ -56,7 +56,7 @@ class SpecimenService:
         specimen_logs(normalized_name).mkdir(parents=True, exist_ok=True)
         specimen_meta(normalized_name).mkdir(parents=True, exist_ok=True)
         
-        # 6. Crear metadata inicial
+        # 6. Create initial metadata
         now_str = datetime.now().isoformat()
         config = SpecimenConfig(
             name=normalized_name,
@@ -82,7 +82,7 @@ class SpecimenService:
 
     @staticmethod
     def list_specimens() -> List[Tuple[SpecimenConfig, SpecimenState, int]]:
-        """Lista todos los specimens existentes con su config, estado y tamaño real en MB."""
+        """Lists all existing specimens with their config, state, and actual size in MB."""
         ensure_base_dirs()
         result = []
         if not spaces_dir().exists():
@@ -106,7 +106,7 @@ class SpecimenService:
 
     @staticmethod
     def get_specimen_info(name: str) -> Tuple[SpecimenConfig, SpecimenState, ToolsConfig, int]:
-        """Obtiene la información detallada de un specimen."""
+        """Obtains detailed information about a specimen."""
         normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
         s_dir = specimen_dir(normalized_name)
         
@@ -119,15 +119,15 @@ class SpecimenService:
 
     @staticmethod
     def remove_specimen(name: str) -> None:
-        """Borra un specimen del disco. Si está activo, lanza SpecimenActiveError."""
+        """Deletes a specimen from disk. If active, raises SpecimenActiveError."""
         normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
         
-        # 1. Verificar si está activo en runtime
+        # 1. Verify if active in runtime
         active_specimen = RuntimeService.get_active_specimen()
         if active_specimen == normalized_name:
-            raise SpecimenActiveError(f"No se puede eliminar el specimen '{normalized_name}' porque está activo.")
+            raise SpecimenActiveError(f"Cannot delete specimen '{normalized_name}' because it is active.")
             
-        # 2. Verificar si está marcado como activo en su state.json
+        # 2. Verify if marked as active in its state.json
         state_path = specimen_state_json(normalized_name)
         is_active = False
         if state_path.exists():
@@ -138,15 +138,15 @@ class SpecimenService:
                 pass
         
         if is_active:
-            raise SpecimenActiveError(f"No se puede eliminar el specimen '{normalized_name}' porque está marcado como activo.")
+            raise SpecimenActiveError(f"Cannot delete specimen '{normalized_name}' because it is marked as active.")
                 
-        # 3. Eliminar la carpeta completa
+        # 3. Delete the complete directory
         s_dir = specimen_dir(normalized_name)
         shutil.rmtree(s_dir)
 
     @staticmethod
     def clone_specimen(parent_name: str, child_name: str, size_mb: int) -> SpecimenConfig:
-        """Clona un specimen existente en uno nuevo e independiente."""
+        """Clones an existing specimen into a new and independent one."""
         normalized_parent = SpecimenValidator.validate_name(parent_name, check_exists=True)
         normalized_child = SpecimenValidator.validate_name(child_name, check_not_exists=True)
         validated_size = SpecimenValidator.validate_size(size_mb)
@@ -156,8 +156,8 @@ class SpecimenService:
         
         if validated_size < parent_real_size:
             raise CloneSizeTooSmallError(
-                f"El tamaño del clon ({validated_size} MB) no puede ser menor "
-                f"al tamaño real actual del padre ({parent_real_size} MB)."
+                f"Clone size ({validated_size} MB) cannot be smaller "
+                f"than the parent's current real size ({parent_real_size} MB)."
             )
             
         SizeService.validate_space_available(spaces_dir(), validated_size)
@@ -189,8 +189,8 @@ class SpecimenService:
     @staticmethod
     def get_hierarchy() -> Tuple[List[str], dict]:
         """
-        Retorna la lista de specimens raíz (sin padre) y un diccionario
-        que mapea cada nombre de specimen a la lista de sus hijos.
+        Returns a list of root specimens (without parent) and a dictionary
+        mapping each specimen name to a list of its children.
         """
         ensure_base_dirs()
         roots = []
@@ -228,13 +228,13 @@ class SpecimenService:
 
     @staticmethod
     def enter_specimen(name: str) -> None:
-        """Entra a un specimen y lanza una subshell aislada."""
+        """Enters a specimen and launches an isolated subshell."""
         normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
         
         active_specimen = RuntimeService.get_active_specimen(auto_cleanup=True)
         if active_specimen:
             raise SpecimenAlreadyActiveError(
-                f"Ya hay un specimen activo: '{active_specimen}'. Salir antes de entrar a otro."
+                f"A specimen is already active: '{active_specimen}'. Exit before entering another one."
             )
             
         config_path = specimen_config_json(normalized_name)
@@ -245,8 +245,8 @@ class SpecimenService:
         if real_size > config.size_mb:
             from rich.console import Console
             Console().print(
-                f"[yellow]⚠ El specimen '{normalized_name}' usa {real_size} MB, "
-                f"superando el límite configurado de {config.size_mb} MB.[/yellow]"
+                f"[yellow]⚠ Specimen '{normalized_name}' uses {real_size} MB, "
+                f"exceeding the configured limit of {config.size_mb} MB.[/yellow]"
             )
             
         shell = os.environ.get("SHELL", "/bin/bash")
@@ -254,8 +254,8 @@ class SpecimenService:
         if shell_name not in ["bash", "zsh", "fish"]:
             from rich.console import Console
             Console().print(
-                f"[yellow]⚠ Shell '{shell_name}' no soportada oficialmente. "
-                f"Usando bash como fallback.[/yellow]"
+                f"[yellow]⚠ Shell '{shell_name}' is not officially supported. "
+                f"Using bash as fallback.[/yellow]"
             )
             shell = "/bin/bash"
             shell_name = "bash"
@@ -325,7 +325,7 @@ class SpecimenService:
 
     @staticmethod
     def set_persistence(name: str, persistent: bool) -> None:
-        """Establece si un specimen es persistente o no en su config.json."""
+        """Sets whether a specimen is persistent or not in its config.json."""
         normalized_name = SpecimenValidator.validate_name(name, check_exists=True)
         config_path = specimen_config_json(normalized_name)
         config = load_json(config_path, SpecimenConfig)
@@ -334,17 +334,17 @@ class SpecimenService:
 
     @staticmethod
     def quit_specimen(conserved: bool) -> None:
-        """Sale del specimen activo actual, y decide si se conserva o destruye."""
+        """Exits the current active specimen and decides whether to conserve or destroy it."""
         runtime_state = RuntimeService.get_runtime_state()
         active_name = runtime_state.active_specimen
         
         if not active_name:
-            raise SpecimenError("No hay ningún specimen activo actualmente.")
+            raise SpecimenError("There is no active specimen currently.")
             
         config_path = specimen_config_json(active_name)
         config = load_json(config_path, SpecimenConfig)
         
-        # Se conserva si el usuario lo solicita con -c, o si ya es persistente en config
+        # Conserved if requested by user with -c, or if it is already persistent in config
         should_conserve = conserved or config.persistent
         exit_mode = "conserved" if should_conserve else "destroyed"
         

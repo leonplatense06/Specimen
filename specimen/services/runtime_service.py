@@ -8,30 +8,30 @@ from specimen.storage.json_storage import load_json, save_json
 class RuntimeService:
     @staticmethod
     def get_runtime_state() -> RuntimeState:
-        """Obtiene el estado de ejecución actual."""
+        """Gets the current execution state."""
         ensure_base_dirs()
         if not active_json().exists():
             return RuntimeState(None, None, None, None)
         try:
             return load_json(active_json(), RuntimeState)
         except Exception:
-            # Retorna estado vacío si está corrupto o hay algún error
+            # Returns empty state if it is corrupt or if there is an error
             return RuntimeState(None, None, None, None)
 
     @classmethod
     def save_runtime_state(cls, state: RuntimeState) -> None:
-        """Guarda el estado de ejecución."""
+        """Saves the execution state."""
         ensure_base_dirs()
         save_json(active_json(), state)
 
     @classmethod
     def clear_runtime_state(cls) -> None:
-        """Limpia el estado de ejecución global."""
+        """Clears the global execution state."""
         cls.save_runtime_state(RuntimeState(None, None, None, None))
 
     @classmethod
     def is_process_alive(cls, pid: int) -> bool:
-        """Verifica si un PID está vivo en Linux."""
+        """Verifies if a PID is alive in Linux."""
         try:
             os.kill(pid, 0)
             return True
@@ -43,8 +43,8 @@ class RuntimeService:
     @classmethod
     def get_active_specimen(cls, auto_cleanup: bool = True) -> Optional[str]:
         """
-        Obtiene el nombre del specimen activo actual.
-        Si hay un proceso registrado pero está muerto, realiza la limpieza automática (si auto_cleanup=True).
+        Gets the name of the current active specimen.
+        If there is a registered process but it is dead, performs automatic cleanup (if auto_cleanup=True).
         """
         state = cls.get_runtime_state()
         if not state.active_specimen:
@@ -59,7 +59,7 @@ class RuntimeService:
 
     @classmethod
     def cleanup_stale_specimen(cls, name: str) -> None:
-        """Limpia un specimen que quedó activo pero su proceso murió."""
+        """Cleans up a specimen that remained active but its process died."""
         from specimen.paths import specimen_state_json
         from specimen.models.state import SpecimenState
         
@@ -75,3 +75,4 @@ class RuntimeService:
                 pass
         
         cls.clear_runtime_state()
+

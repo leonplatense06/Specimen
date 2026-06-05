@@ -34,18 +34,18 @@ def test_create_specimen_success(mock_free, isolated_specimen_env):
     assert config.parent is None
     assert config.persistent is False
     
-    # Verificar que se crearon los directorios
+    # Verify that directories were created
     assert specimen_bin(name).exists()
     assert specimen_tmp(name).exists()
     assert specimen_home(name).exists()
     assert specimen_meta(name).exists()
     
-    # Verificar archivos de metadatos creados
+    # Verify metadata files created
     assert specimen_config_json(name).exists()
     assert specimen_state_json(name).exists()
     assert specimen_tools_json(name).exists()
     
-    # Cargar metadatos y verificar contenido
+    # Load metadata and verify content
     saved_config = load_json(specimen_config_json(name), SpecimenConfig)
     assert saved_config.name == "media"
     assert saved_config.size_mb == 256
@@ -60,7 +60,7 @@ def test_create_specimen_success(mock_free, isolated_specimen_env):
 @patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=100)
 def test_create_specimen_insufficient_space(mock_free, isolated_specimen_env):
     with pytest.raises(InsufficientDiskSpaceError):
-        # Solicita 256 pero solo hay 100
+        # Requests 256 but only 100 is free
         SpecimenService.create_specimen("media", 256)
 
 def test_create_specimen_already_exists(isolated_specimen_env):
@@ -72,7 +72,7 @@ def test_create_specimen_already_exists(isolated_specimen_env):
 
 @patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
 def test_list_specimens(mock_free, isolated_specimen_env):
-    # Crear dos specimens
+    # Create two specimens
     SpecimenService.create_specimen("media", 256)
     SpecimenService.create_specimen("tools", 512)
     
@@ -106,12 +106,12 @@ def test_remove_specimen_success(mock_free, isolated_specimen_env):
     name = "media"
     SpecimenService.create_specimen(name, 256)
     
-    # Confirmar existencia
+    # Confirm existence
     assert specimen_dir(name).exists()
     
     SpecimenService.remove_specimen(name)
     
-    # Verificar que ya no existe
+    # Verify that it no longer exists
     assert not specimen_dir(name).exists()
 
 @patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
@@ -119,12 +119,12 @@ def test_remove_specimen_active_fails(mock_free, isolated_specimen_env):
     name = "media"
     SpecimenService.create_specimen(name, 256)
     
-    # Simular que el specimen está activo
+    # Simulate that the specimen is active
     with patch("specimen.services.runtime_service.RuntimeService.get_active_specimen", return_value=name):
         with pytest.raises(SpecimenActiveError):
             SpecimenService.remove_specimen(name)
             
-    # Simular activo por su propio state.json
+    # Simulate active by its own state.json
     state_path = specimen_state_json(name)
     state = load_json(state_path, SpecimenState)
     state.active = True
@@ -139,14 +139,14 @@ def test_clone_specimen_success(mock_size, mock_free, isolated_specimen_env):
     parent = "media"
     child = "media-clone"
     
-    # Crear padre
+    # Create parent
     SpecimenService.create_specimen(parent, 256)
     
-    # Crear un archivo ficticio en home del padre para verificar copia física
+    # Create a dummy file in parent's home to verify physical copy
     parent_home_file = specimen_home(parent) / "test.txt"
     parent_home_file.write_text("hello world")
     
-    # Clona
+    # Clone
     config = SpecimenService.clone_specimen(parent, child, 300)
     
     assert config.name == "media-clone"
@@ -155,12 +155,12 @@ def test_clone_specimen_success(mock_size, mock_free, isolated_specimen_env):
     assert config.size_mb == 300
     assert config.persistent is False
     
-    # Verificar que el archivo ficticio se copió físicamente al hijo
+    # Verify that the dummy file was physically copied to the child
     child_home_file = specimen_home(child) / "test.txt"
     assert child_home_file.exists()
     assert child_home_file.read_text() == "hello world"
     
-    # Verificar que el state del clon es inactivo
+    # Verify that the clone's state is inactive
     state = load_json(specimen_state_json(child), SpecimenState)
     assert state.active is False
 
@@ -181,7 +181,7 @@ def test_clone_specimen_child_already_exists(mock_free, isolated_specimen_env):
 def test_clone_specimen_size_too_small(mock_size, mock_free, isolated_specimen_env):
     SpecimenService.create_specimen("parent", 256)
     
-    # Padre mide 300 MB, intentamos clonar con size 200 MB -> Debería fallar
+    # Parent size is 300 MB, we try to clone with size 200 MB -> Should fail
     from specimen.exceptions import CloneSizeTooSmallError
     with pytest.raises(CloneSizeTooSmallError):
         SpecimenService.clone_specimen("parent", "child", 200)
@@ -190,7 +190,7 @@ def test_clone_specimen_insufficient_space(isolated_specimen_env):
     with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000):
         SpecimenService.create_specimen("parent", 256)
     
-    # Hay 100 MB libres, solicitamos 200 MB -> Lanzar InsufficientDiskSpaceError
+    # There is 100 MB free, we request 200 MB -> Raise InsufficientDiskSpaceError
     with patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=100):
         with patch("specimen.services.size_service.SizeService.get_specimen_size_mb", return_value=50):
             with pytest.raises(InsufficientDiskSpaceError):
@@ -342,7 +342,7 @@ def test_build_fish_init():
         "SPEC_NAME": "media",
     }
     cmds = launcher._build_fish_init(env)
-    # Verificar que $PATH no tiene barra invertida (\) de escape
+    # Verify that $PATH does not have backslash (\) escapes
     assert 'set -gx PATH "/home/user/.specimen/spaces/media/bin" $PATH' in cmds
     assert 'set -gx SPEC_NAME "media"' in cmds
     assert 'functions -c fish_prompt _original_fish_prompt' in cmds
@@ -352,16 +352,16 @@ def test_set_persistence(mock_free, isolated_specimen_env):
     name = "media"
     SpecimenService.create_specimen(name, 256)
     
-    # Por defecto no es persistente
+    # By default it is not persistent
     config, _, _, _ = SpecimenService.get_specimen_info(name)
     assert config.persistent is False
     
-    # Activar persistencia
+    # Activate persistence
     SpecimenService.set_persistence(name, True)
     config, _, _, _ = SpecimenService.get_specimen_info(name)
     assert config.persistent is True
     
-    # Desactivar persistencia
+    # Deactivate persistence
     SpecimenService.set_persistence(name, False)
     config, _, _, _ = SpecimenService.get_specimen_info(name)
     assert config.persistent is False
@@ -390,7 +390,7 @@ def test_quit_specimen_respects_persistence(mock_free, isolated_specimen_env):
     )
     RuntimeService.save_runtime_state(runtime_state)
     
-    # Aunque conserved=False, al ser persistente debe conservarse
+    # Although conserved=False, since it is persistent it must be conserved
     SpecimenService.quit_specimen(conserved=False)
     
     assert specimen_dir(name).exists()

@@ -6,7 +6,7 @@ from specimen.exceptions import InsufficientDiskSpaceError
 class SizeService:
     @staticmethod
     def get_specimen_size_mb(path: Path) -> int:
-        """Obtiene el tamaño real usado por el directorio en MB con 'du -sm'."""
+        """Gets the actual size used by the directory in MB using 'du -sm'."""
         if not path.exists():
             return 0
         try:
@@ -18,12 +18,12 @@ class SizeService:
             )
             return int(result.stdout.split()[0])
         except Exception:
-            # Fallback por robustez
+            # Fallback for robustness
             return 0
 
     @staticmethod
     def get_free_space_mb(path: Path) -> int:
-        """Obtiene el espacio libre en el disco en MB."""
+        """Gets the free disk space in MB."""
         target = path
         while not target.exists() and target.parent != target:
             target = target.parent
@@ -32,9 +32,10 @@ class SizeService:
 
     @classmethod
     def validate_space_available(cls, target_dir: Path, required_mb: int) -> None:
-        """Verifica si hay suficiente espacio libre en el disco. Si no, lanza InsufficientDiskSpaceError."""
+        """Verifies if there is enough free disk space. If not, raises InsufficientDiskSpaceError."""
         free_mb = cls.get_free_space_mb(target_dir)
         if free_mb < required_mb:
             raise InsufficientDiskSpaceError(
-                f"Espacio insuficiente en disco: se requieren {required_mb} MB, pero solo hay {free_mb} MB libres."
+                f"Insufficient disk space: required {required_mb} MB, but only {free_mb} MB is free."
             )
+

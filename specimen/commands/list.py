@@ -7,22 +7,22 @@ from specimen.exceptions import SpecimenError
 console = Console()
 
 def list_command():
-    """Lista todos los specimens existentes."""
+    """Lists all existing specimens."""
     try:
         specimens = SpecimenService.list_specimens()
         if not specimens:
-            console.print("[yellow]No se encontraron specimens creados. Usa 'spec new' para crear uno.[/yellow]")
+            console.print("[yellow]No specimens found. Use 'spec new' to create one.[/yellow]")
             return
 
-        table = Table(title="Specimens Existentes")
+        table = Table(title="Existing Specimens")
         table.add_column("Name", style="cyan", no_wrap=True)
         table.add_column("Type", style="magenta")
         table.add_column("Parent", style="blue")
-        table.add_column("Size (Usado/Límite)", style="green")
+        table.add_column("Size (Used/Limit)", style="green")
         table.add_column("Active", style="bold green")
         table.add_column("Persistent", style="yellow")
         table.add_column("Created", style="dim")
-
+# ... (rest stays the same)
         for config, state, real_size in specimens:
             active_str = "✔ Yes" if state.active else "No"
             active_style = "bold green" if state.active else "dim white"
@@ -51,5 +51,6 @@ def list_command():
         console.print(f"[red]Error:[/red] {e}")
         raise typer.Exit(code=1)
     except Exception as e:
-        console.print(f"[red]Error inesperado:[/red] {e}")
+        console.print(f"[red]Unexpected error:[/red] {e}")
         raise typer.Exit(code=1)
+

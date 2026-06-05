@@ -402,4 +402,28 @@ def test_quit_specimen_respects_persistence(mock_free, isolated_specimen_env):
     active_name = RuntimeService.get_active_specimen(auto_cleanup=False)
     assert active_name is None
 
+@patch("specimen.services.size_service.SizeService.get_free_space_mb", return_value=1000)
+def test_cleanup_stale_specimen_does_not_overwrite_clean_shutdown(mock_free, isolated_specimen_env):
+    name = "media"
+    SpecimenService.create_specimen(name, 256)
+    
+    # Simulate a clean shutdown with exit_mode = "conserved"
+    state_path = specimen_state_json(name)
+    state = load_json(state_path, SpecimenState)
+    state.active = False
+    state.last_exited_at = "2026-06-05T00:00:00"
+    state.exit_mode = "conserved"
+    save_json(state_path, state)
+    
+    # Invoke cleanup_stale_specimen
+    from specimen.services.runtime_service import RuntimeService
+    RuntimeService.cleanup_stale_specimen(name)
+    
+    # Verify that exit_mode is still "conserved" (not overwritten to None)
+    state = load_json(state_path, SpecimenState)
+    assert state.active is False
+    assert state.exit_mode == "conserved"
+    assert state.last_exited_at == "2026-06-05T00:00:00"
+
+
 

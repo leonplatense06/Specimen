@@ -67,12 +67,14 @@ class RuntimeService:
         if state_path.exists():
             try:
                 spec_state = load_json(state_path, SpecimenState)
-                spec_state.active = False
-                spec_state.last_exited_at = datetime.now().isoformat()
-                spec_state.exit_mode = None
-                save_json(state_path, spec_state)
+                if spec_state.active:
+                    spec_state.active = False
+                    spec_state.last_exited_at = datetime.now().isoformat()
+                    spec_state.exit_mode = None
+                    save_json(state_path, spec_state)
             except Exception:
                 pass
         
         cls.clear_runtime_state()
+
 

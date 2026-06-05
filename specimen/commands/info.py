@@ -1,12 +1,10 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from rich.panel import Panel
 from rich.table import Table
 from specimen.services.specimen_service import SpecimenService
 from specimen.exceptions import SpecimenError
 from specimen.paths import specimen_dir, specimen_bin, specimen_tmp, specimen_home
-
-console = Console()
 
 def info_command(name: str = typer.Argument(..., help="Name of the specimen")):
     """Shows detailed information about a specimen."""

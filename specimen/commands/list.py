@@ -1,10 +1,8 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from rich.table import Table
 from specimen.services.specimen_service import SpecimenService
 from specimen.exceptions import SpecimenError
-
-console = Console()
 
 def list_command():
     """Lists all existing specimens."""

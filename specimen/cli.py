@@ -1,5 +1,5 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from specimen.commands import (
     new_command,
     list_command,
@@ -19,8 +19,6 @@ app = typer.Typer(
     help="Isolated terminal environments CLI for command-line tools (Linux-first)",
     no_args_is_help=True,
 )
-
-console = Console()
 
 @app.callback()
 def main_callback(ctx: typer.Context):

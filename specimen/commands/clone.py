@@ -1,9 +1,7 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from specimen.services.specimen_service import SpecimenService
 from specimen.exceptions import SpecimenError
-
-console = Console()
 
 def clone_command(
     parent: str = typer.Argument(..., help="Name of the original specimen (parent)"),

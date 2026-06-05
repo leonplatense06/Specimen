@@ -1,13 +1,11 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from specimen.services.specimen_service import SpecimenService
 from specimen.services.runtime_service import RuntimeService
 from specimen.paths import specimen_config_json
 from specimen.storage.json_storage import load_json
 from specimen.models import SpecimenConfig
 from specimen.exceptions import SpecimenError
-
-console = Console()
 
 def quit_command(
     conserved: bool = typer.Option(

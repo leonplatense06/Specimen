@@ -243,8 +243,8 @@ class SpecimenService:
         real_size = SizeService.get_specimen_size_mb(s_dir)
         
         if real_size > config.size_mb:
-            from rich.console import Console
-            Console().print(
+            from specimen.console import console
+            console.print(
                 f"[yellow]⚠ Specimen '{normalized_name}' uses {real_size} MB, "
                 f"exceeding the configured limit of {config.size_mb} MB.[/yellow]"
             )
@@ -252,8 +252,8 @@ class SpecimenService:
         shell = os.environ.get("SHELL", "/bin/bash")
         shell_name = Path(shell).name
         if shell_name not in ["bash", "zsh", "fish"]:
-            from rich.console import Console
-            Console().print(
+            from specimen.console import console
+            console.print(
                 f"[yellow]⚠ Shell '{shell_name}' is not officially supported. "
                 f"Using bash as fallback.[/yellow]"
             )

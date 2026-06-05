@@ -1,10 +1,8 @@
 import typer
-from rich.console import Console
+from specimen.console import console
 from rich.tree import Tree
 from specimen.services.specimen_service import SpecimenService
 from specimen.exceptions import SpecimenError
-
-console = Console()
 
 def tree_command():
     """Shows the hierarchy of parent-child relationships between specimens."""

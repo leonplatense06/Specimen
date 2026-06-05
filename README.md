@@ -50,7 +50,7 @@ source .venv/bin/activate.fish
 ### 1. Create a Specimen
 Create a new isolated base environment specifying its size limit in MB:
 ```bash
-spec new media --size 256
+spec new my-specimen --size 256
 ```
 
 ### 2. List Specimens
@@ -62,9 +62,9 @@ spec list
 ### 3. Enter a Specimen (Activation)
 Enter a specimen environment and launch an isolated subshell (supports Bash, Zsh, and Fish):
 ```bash
-spec enter media
+spec enter my-specimen
 ```
-Within the subshell, your prompt will be prefixed (e.g. `(media) user@host:~$`) and key environment variables (`PATH`, `HOME`, `TMPDIR`, and XDG paths) will be redirected to the specimen's directories.
+Within the subshell, your prompt will be prefixed (e.g. `(my-specimen) user@host:~$`) and key environment variables (`PATH`, `HOME`, `TMPDIR`, and XDG paths) will be redirected to the specimen's directories.
 
 ### 4. Quit/Exit a Specimen (Deactivation)
 Exit the active specimen session. You can choose to destroy (delete) the environment or conserve (keep) it:
@@ -81,13 +81,13 @@ spec quit -c
 ### 5. Clone a Specimen
 Create an independent copy/snapshot of an existing specimen. The cloned child inherits the parent's directory structure and tools. The child's size limit must be greater than or equal to the parent's actual size on disk:
 ```bash
-spec clone media media-cloned --size 512
+spec clone my-specimen my-specimen-clone --size 512
 ```
 
 ### 6. Show Details (Info)
 Show detailed metadata, system paths, and installed tools for a specific specimen:
 ```bash
-spec info media
+spec info my-specimen
 ```
 
 ### 7. Hierarchy Tree
@@ -99,9 +99,9 @@ spec tree
 ### 8. Delete a Specimen
 Remove a specimen and all of its files. It prompts for confirmation unless you use the `--force` / `-f` option. Active specimens cannot be deleted:
 ```bash
-spec rm media-cloned
+spec rm my-specimen-clone
 # Or bypass confirmation
-spec rm media-cloned --force
+spec rm my-specimen-clone --force
 ```
 
 ## Running Tests
